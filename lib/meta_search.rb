@@ -15,7 +15,7 @@ module MetaSearch
     ['contains', 'like', 'matches', {:types => STRINGS, :predicate => :matches, :formatter => '"%#{param}%"'}],
     ['does_not_contain', 'nlike', 'not_matches', {:types => STRINGS, :predicate => :does_not_match, :formatter => '"%#{param}%"'}],
     ['starts_with', 'sw', {:types => STRINGS, :predicate => :matches, :formatter => '"#{param}%"'}],
-    ['does_not_start_with', 'dnsw', {:types => STRINGS, :predicate => :does_not_match, :formatter => '"%#{param}%"'}],
+    ['does_not_start_with', 'dnsw', {:types => STRINGS, :predicate => :does_not_match, :formatter => '"#{param}%"'}],
     ['ends_with', 'ew', {:types => STRINGS, :predicate => :matches, :formatter => '"%#{param}"'}],
     ['does_not_end_with', 'dnew', {:types => STRINGS, :predicate => :does_not_match, :formatter => '"%#{param}"'}],
     ['greater_than', 'gt', {:types => (NUMBERS + DATES + TIMES), :predicate => :gt}],
@@ -47,13 +47,11 @@ require 'active_record'
 require 'active_support'
 require 'action_view'
 require 'action_controller'
-require 'meta_search/join_dependency'
 require 'meta_search/searches/active_record'
 require 'meta_search/helpers'
 
 I18n.load_path += Dir[File.join(File.dirname(__FILE__), 'meta_search', 'locale', '*.yml')]
 
-ActiveRecord::Associations::ClassMethods::JoinDependency.send(:include, MetaSearch::JoinDependency)
 ActiveRecord::Base.send(:include, MetaSearch::Searches::ActiveRecord)
 ActionView::Helpers::FormBuilder.send(:include, MetaSearch::Helpers::FormBuilder)
 ActionController::Base.helper(MetaSearch::Helpers::UrlHelper)

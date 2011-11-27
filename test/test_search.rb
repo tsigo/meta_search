@@ -74,6 +74,52 @@ class TestSearch < Test::Unit::TestCase
     end
   end
 
+  context "A Developer search" do
+    setup do
+      @s = Developer.search({:name_equals=>"Forgetful Notetaker"})
+    end
+
+    context "without any opts" do
+      should "find a null entry when searching notes" do
+        assert_equal 1, @s.notes_note_is_null(true).all.size
+      end
+
+      should "find no non-null entry when searching notes" do
+        assert_equal 0, @s.notes_note_is_not_null(true).all.size
+      end
+    end
+
+    context "with outer join specified" do
+      setup do
+        @s = Developer.search({:name_equals => "Forgetful Notetaker"}, :join_type => :outer)
+      end
+
+      should "find a null entry when searching notes" do
+        assert_equal 1, @s.notes_note_is_null(true).all.size
+      end
+
+      should "find no non-null entry when searching notes" do
+        assert_equal 0, @s.notes_note_is_not_null(true).all.size
+      end
+    end
+
+    context "with inner join specified" do
+      setup do
+        @s = Developer.search({:name_equals=>"Forgetful Notetaker"}, :join_type => :inner)
+      end
+
+      should "find no null entry when searching notes" do
+        assert_equal 0, @s.notes_note_is_null(true).all.size
+      end
+
+      should "find no non-null entry when searching notes" do
+        assert_equal 0, @s.notes_note_is_not_null(true).all.size
+      end
+    end
+
+
+  end
+
   [{:name => 'Company', :object => Company},
    {:name => 'Company as a Relation', :object => Company.scoped}].each do |object|
     context_a_search_against object[:name], object[:object] do
@@ -477,8 +523,8 @@ class TestSearch < Test::Unit::TestCase
           @s.name_ne = 'Ernie Miller'
         end
 
-        should "return seven results" do
-          assert_equal 7, @s.all.size
+        should "return eight results" do
+          assert_equal 8, @s.all.size
         end
 
         should "not return a developer named Ernie Miller" do
@@ -905,6 +951,12 @@ class TestSearch < Test::Unit::TestCase
         assert_equal Project.find_by_name('MetaSearch Development').notes +
                      Developer.find_by_name('Michael Bolton').notes,
                      @s.all
+      end
+
+      should "allow traversal of polymorphic associations" do
+        @s.notable_developer_type_company_name_starts_with = 'M'
+        assert_equal Company.find_by_name('Mission Data').developers.map(&:notes).flatten.sort {|a, b| a.id <=>b.id},
+                     @s.all.sort {|a, b| a.id <=> b.id}
       end
 
       should "raise an error when attempting to search against polymorphic belongs_to association without a type" do
